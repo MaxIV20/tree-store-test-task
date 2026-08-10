@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref, computed, toValue } from 'vue';
 import type { ColDef, GridSizeChangedEvent } from 'ag-grid-community';
 import { TreeStore } from './tree-store';
 import { type TreeStoreItem } from './tree-store.types';
@@ -7,7 +7,7 @@ export function useTreeStoreTableData(items: TreeStoreItem[]) {
   const treeStoreInstance = new TreeStore(items);
 
   const rowData = computed(() => {
-    return treeStoreInstance.getAll();
+    return toValue(treeStoreInstance.getAll());
   });
 
   const columnDefs = ref<ColDef<TreeStoreItem>[]>([
@@ -18,7 +18,6 @@ export function useTreeStoreTableData(items: TreeStoreItem[]) {
 
   // Растягивает все колонки, чтобы они заполнили 100% ширины grid-контейнера
   const onGridReady = (event: GridSizeChangedEvent) => {
-    console.log(event);
     event.api.sizeColumnsToFit();
   };
 

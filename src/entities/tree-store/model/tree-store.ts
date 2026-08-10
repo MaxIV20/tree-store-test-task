@@ -1,14 +1,16 @@
-import { reactive, type Reactive } from 'vue';
+import { ref, type Ref } from 'vue';
 import { type TreeStoreItem } from './tree-store.types';
 
 type ItemId = TreeStoreItem['id'];
 
 export class TreeStore {
-  private items: Reactive<TreeStoreItem[]> = reactive([]);
+  // Добавляем реактивность, чтобы таблица реагировала изменение элементов
+  // По тз об этом не говорится, но раз класс используется в vue, то лишним не будет
+  private items: Ref<TreeStoreItem[]> = ref([]);
 
   constructor(initialItems: TreeStoreItem[]) {
     // Клонируем чтобы не изменялись исходные данные
-    this.items = this.cloneItems(initialItems);
+    this.items.value = this.cloneItems(initialItems);
   }
 
   private cloneItems(items: TreeStoreItem[]): TreeStoreItem[] {
@@ -25,7 +27,7 @@ export class TreeStore {
   private _getAllChildren(parenIds: Array<ItemId>): TreeStoreItem[] {
     const childIds: Array<ItemId> = [];
 
-    const children = this.items.filter((item) => {
+    const children = this.items.value.filter((item) => {
       const isChild = item.parent && parenIds.includes(item.parent);
       if (isChild) {
         childIds.push(item.id);
@@ -56,13 +58,13 @@ export class TreeStore {
 
   // Для несуществующих id возвращает undefined (намеренно, по аналогии с map и set)
   getItem(id: ItemId): TreeStoreItem | undefined {
-    return this.items.find((item) => item.id === id);
+    return this.items.value.find((item) => item.id === id);
   }
 
   getChildren(id: ItemId): TreeStoreItem[] {
     this.checkAvailabilityItem(id);
 
-    return this.items.filter(({ parent }) => parent === id);
+    return this.items.value.filter(({ parent }) => parent === id);
   }
 
   getAllChildren(id: ItemId): TreeStoreItem[] {
@@ -86,15 +88,15 @@ export class TreeStore {
   }
 
   addItem(item: TreeStoreItem) {
-    this.items.push(item);
+    this.items.value.push(item);
   }
 
   removeItem(id: ItemId) {
-    this.items = this.items.filter((item) => item.id !== id);
+    this.items.value = this.items.value.filter((item) => item.id !== id);
   }
 
   updateItem(item: TreeStoreItem) {
-    const itemIndex = this.items.findIndex(({ id }) => id === item.id);
-    this.items[itemIndex] = item;
+    const itemIndex = this.items.value.findIndex(({ id }) => id === item.id);
+    this.items.value[itemIndex] = item;
   }
 }

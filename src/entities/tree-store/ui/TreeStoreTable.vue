@@ -19,9 +19,3 @@ const { columnDefs, rowData, onGridReady, onGridSizeChanged } =
     domLayout="autoHeight"
   />
 </template>
-
-<style module>
-.table {
-  height: 600px;
-}
-</style>
