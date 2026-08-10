@@ -1,0 +1,32 @@
+{
+  "name": "tree-store-test-task",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --open",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "ag-grid-enterprise": "36.1.0",
+    "ag-grid-vue3": "36.1.0",
+    "vue": "3.5.41",
+    "vue-router": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@vitejs/plugin-vue": "6.0.8",
+    "@vue/eslint-config-prettier": "10.2.0",
+    "@vue/eslint-config-typescript": "14.9.0",
+    "@vue/tsconfig": "0.9.1",
+    "eslint": "10.8.1",
+    "eslint-plugin-vue": "10.10.0",
+    "prettier": "3.9.6",
+    "typescript": "5.9.3",
+    "vite": "8.2.1",
+    "vue-tsc": "3.3.9"
+  }
+}
