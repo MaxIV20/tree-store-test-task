@@ -14,5 +14,6 @@ import AppLayout from '@/layout/AppLayout.vue';
 <style module>
 .app {
   display: flex;
+  width: 100%;
 }
 </style>

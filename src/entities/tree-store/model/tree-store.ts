@@ -1,9 +1,10 @@
-import { TreeStoreItem } from './tree-store.types';
+import { reactive, type Reactive } from 'vue';
+import { type TreeStoreItem } from './tree-store.types';
 
 type ItemId = TreeStoreItem['id'];
 
 export class TreeStore {
-  private items: TreeStoreItem[] = [];
+  private items: Reactive<TreeStoreItem[]> = reactive([]);
 
   constructor(initialItems: TreeStoreItem[]) {
     // Клонируем чтобы не изменялись исходные данные
@@ -49,7 +50,7 @@ export class TreeStore {
     return parentItem ? [parentItem] : [];
   }
 
-  getAll(): TreeStoreItem[] {
+  getAll() {
     return this.items;
   }
 
