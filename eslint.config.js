@@ -1,29 +1,49 @@
-import { globalIgnores } from 'eslint/config';
-import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
+import js from '@eslint/js';
 import pluginVue from 'eslint-plugin-vue';
-import skipFormatting from '@vue/eslint-config-prettier/skip-formatting';
+import globals from 'globals';
+import eslintConfigPrettier from 'eslint-config-prettier';
+import tseslint from 'typescript-eslint';
 
-// To allow more languages other than `ts` in `.vue` files, uncomment the following lines:
-// import { configureVueProject } from '@vue/eslint-config-typescript'
-// configureVueProject({ scriptLangs: ['ts', 'tsx'] })
-// More info at https://github.com/vuejs/eslint-config-typescript/#advanced-setup
-
-export default defineConfigWithVueTs(
+/** @type {import("eslint").Linter.Config[]} */
+export default [
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  ...pluginVue.configs['flat/recommended'],
+  eslintConfigPrettier,
   {
-    name: 'app/files-to-lint',
-    files: ['**/*.{ts,mts,tsx,js,vue}'],
+    files: ['**/*.vue'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+      parserOptions: {
+        parser: tseslint.parser,
+        extraFileExtensions: ['.vue'],
+      },
+    },
   },
-
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
-
-  pluginVue.configs['flat/essential'],
-  vueTsConfigs.recommended,
-  skipFormatting,
-
+  {
+    files: ['**/*.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+      parser: tseslint.parser,
+    },
+  },
   {
     rules: {
       'vue/multi-word-component-names': 'off',
       'vue/require-default-prop': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-namespace': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { varsIgnorePattern: '^_$', argsIgnorePattern: '^_$' },
+      ],
     },
   },
-);
+  {
+    ignores: ['dist/**', 'node_modules/**'],
+  },
+];
