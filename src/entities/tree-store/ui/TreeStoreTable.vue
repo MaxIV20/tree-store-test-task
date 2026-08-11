@@ -6,16 +6,26 @@ type Props = { items: TreeStoreItem[] };
 
 const { items } = defineProps<Props>();
 
-const { columnDefs, rowData, onGridReady, onGridSizeChanged } =
-  useTreeStoreTableData(items);
+const {
+  columnDefs,
+  rowData,
+  getRowId,
+  onGridReady,
+  onGridSizeChanged,
+} = useTreeStoreTableData(items);
 </script>
 
 <template>
   <AgGridVue
-    :columnDefs
-    :rowData
-    :onGridReady
-    :onGridSizeChanged
-    domLayout="autoHeight"
+    :column-defs
+    :row-data
+    :get-row-id
+    tree-data
+    tree-data-display-type="custom"
+    tree-data-parent-id-field="parent"
+    :group-default-expanded="-1"
+    dom-layout="autoHeight"
+    :on-grid-ready
+    :on-grid-size-changed
   />
 </template>

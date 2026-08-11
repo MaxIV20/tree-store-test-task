@@ -7,7 +7,7 @@ import {
   ColumnHoverModule,
   ClientSideRowModelModule,
 } from 'ag-grid-community';
-import { RowGroupingModule } from 'ag-grid-enterprise';
+import { RowGroupingModule, TreeDataModule } from 'ag-grid-enterprise';
 
 async function init() {
   const app = createApp(App);
@@ -17,6 +17,7 @@ async function init() {
     ColumnHoverModule,
     ClientSideRowModelModule,
     RowGroupingModule,
+    TreeDataModule,
   ]);
 
   app.use(router);
