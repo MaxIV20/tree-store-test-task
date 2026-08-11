@@ -8,7 +8,9 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "lint": "eslint . --max-warnings 0",
-    "check-types": "vue-tsc --noEmit"
+    "check-types": "vue-tsc --noEmit",
+    "test": "vitest run --exclude src/entities/tree-store/model/tree-store.performance.test.ts",
+    "test:performance": "vitest run src/entities/tree-store/model/tree-store.performance.test.ts --reporter=verbose"
   },
   "dependencies": {
     "ag-grid-enterprise": "36.1.0",
@@ -31,6 +33,7 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.67.0",
     "vite": "8.2.1",
+    "vitest": "^4.1.10",
     "vue-tsc": "3.3.9"
   }
 }
