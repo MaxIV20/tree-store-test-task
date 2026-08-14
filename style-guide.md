@@ -232,7 +232,7 @@ entities/auction/
 
 ---
 
-## Именование и публичный API
+## Именование
 
 | Что | Стиль | Пример |
 | --- | --- | --- |
@@ -242,9 +242,35 @@ entities/auction/
 | Model-composables | `use` + PascalCase | `useResourceViewModel` |
 | Константы | `UPPER_SNAKE_CASE` для одиночных значений; camelCase для словарей и списков | `SCOPE`, `statusOptions` |
 
-Каждый слайс раскрывает наружу только необходимое через корневой `index.ts`.
-Внутренние компоненты, composables, utils и API-функции остаются приватными на
-уровне корневого API.
+---
 
-UI-копирайт, документация и комментарии пишутся на русском языке. Не создавайте
-коммиты от имени пользователя.
+## Barrel-экспорты (`index.ts`)
+
+`index.ts` — публичный контракт директории. Он экспортирует только то, что
+нужно её потребителям; внутренние компоненты, composables, utils и API-функции
+не раскрываются автоматически.
+
+- Корневой `index.ts` слайса — единственная точка импорта для других слайсов.
+- `index.ts` сегмента (`ui`, `model`, `utils`, `constants`) собирает его
+  осознанно выбранный API для остальных сегментов того же слайса.
+- Не используйте `export *`, если это раскрывает внутренние модули. Экспортируйте
+  конкретные значения и типы по имени.
+- Компонент или composable, используемый только внутри одной директории,
+  остаётся приватным и не попадает в её `index.ts`.
+- `endpoints/` намеренно не содержит `index.ts`: endpoint-файлы доступны только
+  Vue Query-композаблам из `api/vue-query/`.
+
+```text
+widgets/resource-list/
+├── model/
+│   ├── use-resource-list-view-model.ts
+│   └── index.ts                 # export { useResourceListViewModel } from './use-resource-list-view-model'
+├── ui/
+│   ├── ResourceList.vue
+│   ├── ResourceListRow.vue      # используется только в ResourceList.vue
+│   └── index.ts                 # export { default as ResourceList } from './ResourceList.vue'
+└── index.ts                     # export { ResourceList } from './ui'
+```
+
+В примере `ResourceListRow` и ViewModel не становятся частью API widget: другим
+слайсам доступен только `ResourceList`.
