@@ -1,4 +1,4 @@
-import { ref, type Ref } from 'vue';
+import { shallowRef, triggerRef, type ShallowRef } from 'vue';
 import { type TreeStoreItem } from './tree-store.types';
 
 type ItemId = TreeStoreItem['id'];
@@ -6,7 +6,7 @@ type ItemId = TreeStoreItem['id'];
 export class TreeStore {
   // Добавляем реактивность, чтобы таблица реагировала изменение элементов
   // По тз об этом не говорится, но раз класс используется в vue, то лишним не будет
-  private items: Ref<TreeStoreItem[]> = ref([]);
+  private items: ShallowRef<TreeStoreItem[]> = shallowRef([]);
 
   constructor(initialItems: TreeStoreItem[]) {
     // Клонируем чтобы не изменялись исходные данные
@@ -53,7 +53,7 @@ export class TreeStore {
   }
 
   getAll() {
-    return this.items;
+    return this.items.value;
   }
 
   // Для несуществующих id возвращает undefined (намеренно, по аналогии с map и set)
@@ -81,22 +81,27 @@ export class TreeStore {
     }
 
     if (!targetItem.parent) {
-      return [];
+      return [targetItem];
     }
 
-    return this._getAllParents(targetItem.parent);
+    return [targetItem, ...this._getAllParents(targetItem.parent)];
   }
 
   addItem(item: TreeStoreItem) {
     this.items.value.push(item);
+    triggerRef(this.items);
   }
 
   removeItem(id: ItemId) {
-    this.items.value = this.items.value.filter((item) => item.id !== id);
+    const deletedIds = [id, ...this.getChildren(id).map(({ id }) => id)];
+    this.items.value = this.items.value.filter(
+      (item) => !deletedIds.includes(item.id),
+    );
   }
 
   updateItem(item: TreeStoreItem) {
     const itemIndex = this.items.value.findIndex(({ id }) => id === item.id);
     this.items.value[itemIndex] = item;
+    triggerRef(this.items);
   }
 }

@@ -1,4 +1,4 @@
-import { ref, computed, toValue } from 'vue';
+import { ref, computed } from 'vue';
 import type {
   ColDef,
   GridSizeChangedEvent,
@@ -13,7 +13,7 @@ export function useTreeStoreTableData(items: TreeStoreItem[]) {
   const treeStoreInstance = new TreeStore(items);
 
   const rowData = computed(() => {
-    return toValue(treeStoreInstance.getAll());
+    return treeStoreInstance.getAll();
   });
 
   const columnDefs = ref<ColDef<TreeStoreItem>[]>([
