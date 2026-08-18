@@ -5,17 +5,36 @@ type ItemId = TreeStoreItem['id'];
 
 export class TreeStore {
   // Добавляем реактивность, чтобы таблица реагировала изменение элементов
-  // По тз об этом не говорится, но раз класс используется в vue, то лишним не будет
   private items: ShallowRef<TreeStoreItem[]> = shallowRef([]);
+
+  // Используем индекс смежности для быстрого поиска дочерних элементов
+  private childrenByParent: Map<ItemId | null, TreeStoreItem[]> = new Map();
+
+  // Для быстрого поиска элементов (чтобы не приходилось перебирать весь массив)
+  private itemsMap: Map<ItemId, TreeStoreItem> = new Map();
 
   constructor(initialItems: TreeStoreItem[]) {
     // Клонируем чтобы не изменялись исходные данные
     this.items.value = this.cloneItems(initialItems);
+    this.buildItemsMap();
   }
 
   private cloneItems(items: TreeStoreItem[]): TreeStoreItem[] {
-    // Клонирование через JSON.parse для обычных массивов и объектов работает быстрее чем structuredClone
     return JSON.parse(JSON.stringify(items));
+  }
+
+  private buildItemsMap() {
+    this.items.value.forEach((item) => {
+      this.itemsMap.set(item.id, item);
+
+      const parentItem = this.childrenByParent.get(item.parent);
+
+      if (parentItem) {
+        parentItem.push(item);
+      } else {
+        this.childrenByParent.set(item.parent, [item]);
+      }
+    });
   }
 
   private checkAvailabilityItem(id: ItemId) {
@@ -24,53 +43,33 @@ export class TreeStore {
     }
   }
 
-  private _getAllChildren(parenIds: Array<ItemId>): TreeStoreItem[] {
-    const childIds: Array<ItemId> = [];
-
-    const children = this.items.value.filter((item) => {
-      const isChild = item.parent && parenIds.includes(item.parent);
-      if (isChild) {
-        childIds.push(item.id);
-      }
-      return isChild;
-    });
-
-    if (children.length) {
-      children.push(...this._getAllChildren(childIds));
-    }
-
-    return children;
-  }
-
-  private _getAllParents(parentId: ItemId): TreeStoreItem[] {
-    const parentItem = this.getItem(parentId);
-
-    if (parentItem?.parent) {
-      return [parentItem, ...this._getAllParents(parentItem.parent)];
-    }
-
-    return parentItem ? [parentItem] : [];
-  }
-
   getAll() {
     return this.items.value;
   }
 
-  // Для несуществующих id возвращает undefined (намеренно, по аналогии с map и set)
   getItem(id: ItemId): TreeStoreItem | undefined {
-    return this.items.value.find((item) => item.id === id);
+    return this.itemsMap.get(id);
   }
 
   getChildren(id: ItemId): TreeStoreItem[] {
     this.checkAvailabilityItem(id);
-
-    return this.items.value.filter(({ parent }) => parent === id);
+    return this.childrenByParent.get(id) ?? [];
   }
 
   getAllChildren(id: ItemId): TreeStoreItem[] {
-    this.checkAvailabilityItem(id);
+    const children = [...this.getChildren(id)];
+    let nextChildren = children;
 
-    return this._getAllChildren([id]);
+    do {
+      const localChildren: TreeStoreItem[] = [];
+      nextChildren.forEach((item) => {
+        localChildren.push(...this.getChildren(item.id));
+      });
+      children.push(...localChildren);
+      nextChildren = localChildren;
+    } while (nextChildren.length);
+
+    return children;
   }
 
   getAllParents(id: ItemId) {
@@ -80,28 +79,60 @@ export class TreeStore {
       throw new Error('Invalid item id');
     }
 
+    const parents = [targetItem];
+
     if (!targetItem.parent) {
-      return [targetItem];
+      return parents;
     }
 
-    return [targetItem, ...this._getAllParents(targetItem.parent)];
+    let nextParentId: TreeStoreItem['parent'] = targetItem.parent;
+
+    while (nextParentId) {
+      const parentEl = this.itemsMap.get(nextParentId);
+      if (parentEl) {
+        parents.push(parentEl);
+      }
+      nextParentId = parentEl?.parent ?? null;
+    }
+
+    return parents;
   }
 
   addItem(item: TreeStoreItem) {
     this.items.value.push(item);
+    this.itemsMap.set(item.id, item);
+    const parentItem = this.childrenByParent.get(item.parent);
+
+    if (parentItem) {
+      parentItem.push(item);
+    } else {
+      this.childrenByParent.set(item.parent, [item]);
+    }
+
     triggerRef(this.items);
   }
 
   removeItem(id: ItemId) {
+    const deletedItem = this.getItem(id);
     const deletedIds = [id, ...this.getChildren(id).map(({ id }) => id)];
+
     this.items.value = this.items.value.filter(
       (item) => !deletedIds.includes(item.id),
     );
+    this.itemsMap.delete(id);
+
+    const parentId = deletedItem?.parent ?? null;
+    const parentItems = this.childrenByParent.get(parentId);
+    const items = parentItems?.filter((item) => item.id !== id) ?? [];
+    this.childrenByParent.set(parentId, items);
   }
 
   updateItem(item: TreeStoreItem) {
-    const itemIndex = this.items.value.findIndex(({ id }) => id === item.id);
-    this.items.value[itemIndex] = item;
+    const editItem = this.itemsMap.get(item.id);
+    if (!editItem) return;
+    // Изменяем объект по ссылке, чтобы не искать его в каждой коллекции
+    Object.assign(editItem, item);
+
     triggerRef(this.items);
   }
 }
